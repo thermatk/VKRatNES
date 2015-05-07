@@ -1,11 +1,6 @@
 package com.thermatk.vkr;
 
 import java.io.*;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * Created by Ruslan Boitsov on 08.04.15.

@@ -1,9 +1,7 @@
 package com.thermatk.vkr;
 
-import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.commons.math3.stat.inference.TestUtils;
 
 import java.io.*;
@@ -13,13 +11,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Created by thermatk on 20.04.15.
+ * Created by thermatk on 30.04.15.
  */
 public class LastStepAltAlt {
-    String cvsSplitBy = ",";
-    double xchangeError = 0.0;
+    private final String cvsSplitBy = ",";
+    private double xchangeError = 0.0;
 
-    List<String> finalStats = new ArrayList<String>();
+    private List<String> finalStats = new ArrayList<String>();
 
     public static void main(String[] args) {
         LastStepAltAlt step = new LastStepAltAlt();
@@ -156,8 +154,7 @@ public class LastStepAltAlt {
         return out;
     }
     private String readConfig (String filedir) {
-        String conf = readFromCSV(filedir + "/perconfig.txt")[0];
-        return conf;
+        return readFromCSV(filedir + "/perconfig.txt")[0];
     }
 
     private double[] convertToHours(String[] input, int begin, int end) {
@@ -441,7 +438,6 @@ public class LastStepAltAlt {
 
     private double getCorrelation(double[] x, double[] y) {
         PearsonsCorrelation pCorrObject = new PearsonsCorrelation();
-        double corr = pCorrObject.correlation(x,y);
-        return corr;
+        return pCorrObject.correlation(x,y);
     }
 }

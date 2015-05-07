@@ -90,8 +90,7 @@ public class LastStep {
     }
     private String readConfig (String filedir) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(filedir + "/perconfig.txt"));
-        String conf = br.readLine();
-        return conf;
+        return br.readLine();
     }
 
 
