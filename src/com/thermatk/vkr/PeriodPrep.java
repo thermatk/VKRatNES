@@ -6,14 +6,14 @@ import java.io.*;
  * Created by Ruslan Boitsov on 08.04.15.
  */
 
-public class PeriodPrep {
-    String cvsSplitBy = ",";
+class PeriodPrep {
+    private final String cvsSplitBy = ",";
     public static void main(String[] args) {
         PeriodPrep per = new PeriodPrep();
         per.run();
     }
 
-    public void run() {
+    private void run() {
 
 
         String[] followers = "localbtc,bitbox,fbtc,crytr,cbx,icbit,bitkonan,vcx,anxhk,just,kraken,rock,itbit,cotr,hitbtc,bitstamp,bitfinex,mtgox,btce".split(",");
@@ -26,21 +26,17 @@ public class PeriodPrep {
             br = new BufferedReader(new FileReader(csvFile));
 
             int i = 0;
-            String[] titles;
 
-            // stats
             File fileStats = new File("/media/thermatk/PROGR/BTCFIN2/stats.txt");
             if (!fileStats.exists()) {
                 fileStats.createNewFile();
             }
-
             FileWriter fwStats = new FileWriter(fileStats.getAbsoluteFile());
             BufferedWriter bwStats = new BufferedWriter(fwStats);
-            ////
+
             while ((line = br.readLine()) != null) {
                 if(i==0) {
-                    //titles = line.split(cvsSplitBy);
-                    //System.out.println("\""+titles[0] + "\",\""+titles[1] + "\",\"" + titles[2] + "\"");
+
                 } else {
                     String[] stringFromCSV = line.split(cvsSplitBy);
 
@@ -59,8 +55,6 @@ public class PeriodPrep {
                         System.out.println("Leader N/A for " + i);
                     }
 
-
-                    ///////
                     String statsFollowers = "";
                     for(String follower: followers) {
                         if(!follower.equals(leader)) {
@@ -72,21 +66,12 @@ public class PeriodPrep {
                         }
                     }
 
-
-                    ///////
-
-
-
-
                     String outString = "Period#: " + i + ", Time: " + (end - begin) + ", Leader: " + sLeaderCount + ", Followers: " + statsFollowers;
                     System.out.println(outString);
 
                     bwStats.write(outString);
                     bwStats.newLine();
-                    /////
                 }
-                ////
-                ////
                 i++;
             }
             bwStats.close();
@@ -113,7 +98,6 @@ public class PeriodPrep {
     }
 
     private void writeConfig(String filedir, String leader, long begin, long end) throws IOException {
-        // config
         File file = new File(filedir + "/perconfig.txt");
         if (!file.exists()) {
             file.createNewFile();
@@ -123,7 +107,6 @@ public class PeriodPrep {
         BufferedWriter bw = new BufferedWriter(fw);
         bw.write(leader + "," + begin+ "," + end);
         bw.close();
-        /////
     }
 
     private int writePeriodPrepFollowers(BufferedReader brFollower, String filedir, long begin, long end, String name) throws IOException {
@@ -137,7 +120,7 @@ public class PeriodPrep {
 
         FileWriter fw2 = new FileWriter(fFile.getAbsoluteFile());
         BufferedWriter bwFollower = new BufferedWriter(fw2);
-        /////
+
         boolean firstline = true;
         while ((lineFollower = brFollower.readLine()) != null) {
             String[] stringFromCSVFollower = lineFollower.split(cvsSplitBy);
@@ -191,7 +174,6 @@ public class PeriodPrep {
             }
             bwLeader.write(time + "," + price);
             sLeaderCount++;
-            //System.out.println(previousTime +","+(leaderTime - 1) +",\"" + previousLeader + "\"");
         }
         bwLeader.close();
         return sLeaderCount;

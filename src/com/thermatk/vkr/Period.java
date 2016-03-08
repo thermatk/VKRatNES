@@ -14,13 +14,13 @@ import java.util.TimeZone;
  * Created by Ruslan Boitsov on 03.04.15.
  */
 
-public class Period {
+class Period {
     public static void main(String[] args) {
         Period per = new Period();
         per.run();
     }
 
-    public void run() {
+    private void run() {
 
         String csvFile = "/home/thermatk/BTC/Final/Step2/JavaFunFixedMissing.csv";
         BufferedReader br = null;
@@ -35,12 +35,12 @@ public class Period {
 
             long previousTime = 0;
             String previousLeader = "";
-            String leader ="";
+            String leader = "";
             long leaderTime = 0;
             while ((line = br.readLine()) != null) {
-                if(i==0) {
+                if (i == 0) {
                     titles = line.split(cvsSplitBy);
-                    System.out.println("\""+titles[0] + "\",\"" + titles[21] + "\"");
+                    System.out.println("\"" + titles[0] + "\",\"" + titles[21] + "\"");
                 } else {
                     String[] stringFromCSV = line.split(cvsSplitBy);
                     //
@@ -53,11 +53,11 @@ public class Period {
 
                     if (previousLeader.equals(leader)) {
                         //do nothing, continue
-                    } else if(previousLeader.equals("")) {
+                    } else if (previousLeader.equals("")) {
                         previousLeader = leader;
                         previousTime = leaderTime;
                     } else {
-                        System.out.println(previousTime +","+(leaderTime - 1) +",\"" + previousLeader + "\"");
+                        System.out.println(previousTime + "," + (leaderTime - 1) + ",\"" + previousLeader + "\"");
                         previousLeader = leader;
                         previousTime = leaderTime;
                     }
@@ -66,10 +66,10 @@ public class Period {
             }
 
             if (previousLeader.equals(leader)) {
-                System.out.println(previousTime +","+leaderTime +",\"" + previousLeader + "\"");
+                System.out.println(previousTime + "," + leaderTime + ",\"" + previousLeader + "\"");
             } else {
-                System.out.println(previousTime +","+(leaderTime - 1) +",\"" + previousLeader + "\"");
-                System.out.println(leaderTime +","+(leaderTime + 24*60*60) +",\"" + leader + "\"");
+                System.out.println(previousTime + "," + (leaderTime - 1) + ",\"" + previousLeader + "\"");
+                System.out.println(leaderTime + "," + (leaderTime + 24 * 60 * 60) + ",\"" + leader + "\"");
             }
 
 

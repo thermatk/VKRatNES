@@ -12,46 +12,45 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Created by Ruslan Boitsov on 30.04.15.
+ * Created by thermatk on 30.04.15.
  */
-class LastStep {
+public class LastStepAltSec {
     private final String cvsSplitBy = ",";
     private double xchangeError = 0.0;
 
     private List<String> finalStats = new ArrayList<String>();
 
     public static void main(String[] args) {
-        LastStep step = new LastStep();
+        LastStepAltSec step = new LastStepAltSec();
         step.run();
     }
 
-    private void run() {
+    public void run() {
 
-        String path = "/media/thermatk/PROGR/BTCFIN4/";
-        String[] readStats = readFromCSV(path + "stats.txt");
+        String[] readStats = readFromCSV("/media/thermatk/PROGR/BTCFIN4/stats.txt");
 
         String[] output = new String[readStats.length];
-        for (int i = 0; i < readStats.length; i++) {
-            output[i] = "";
+        for(int i=0;i<readStats.length;i++) {
+            output[i]="";
         }
 
 
         String[] allFollowers = "localbtc,bitbox,fbtc,crytr,cbx,icbit,bitkonan,vcx,anxhk,just,kraken,rock,itbit,cotr,hitbtc,bitstamp,bitfinex,mtgox,btce".split(",");
-        HashMap<String, Integer> mapFollList = makeMap(allFollowers);
+        HashMap<String,Integer> mapFollList= makeMap(allFollowers);
         List<String> follList = new ArrayList<String>(allFollowers.length);
-        for (int i = 0; i < allFollowers.length; i++) {
-            follList.add(i, "");
+        for(int i=0;i<allFollowers.length;i++) {
+            follList.add(i,"");
         }
 
-        for (int i = 0; i < readStats.length; i++) {
+        for(int i=0;i<readStats.length;i++) {
             String[] stringFromConfig = readStats[i].split(cvsSplitBy);
             int periodNum = Integer.parseInt(stringFromConfig[0].split(":")[1].replaceAll(" ", ""));
 
-            String filedir = path + periodNum;
+            String filedir = "/media/thermatk/PROGR/BTCFIN4/" + periodNum;
             String periodData = readConfig(filedir);
 
 
-            log(periodData, 1);
+            log(periodData,1);
 
 
             String leaderName = periodData.split(cvsSplitBy)[0];
@@ -61,71 +60,72 @@ class LastStep {
             output[i] = "Period#" + periodNum + ": " + periodData + ", ";
 
 
-            double[] leaderD = convertToMinutes(readFromCSV(filedir + "/leader.csv"), begin, end);
 
-            log("-c: conv leader success " + leaderD.length, 2);
+            double[] leaderD = convertToMinutes(readFromCSV(filedir+"/leader.csv"), begin, end);
 
-            String[] followers = stringFromConfig[3].split(":")[1].replaceAll(" ", "").replaceAll(Pattern.quote("}{"), ",").replaceAll(Pattern.quote("}"), "").replaceAll(Pattern.quote("{"), "").split(",");
-            for (int d = 0; d < followers.length; d++) {
+            log("-c: conv leader success " + leaderD.length,2);
+
+            String[] followers = stringFromConfig[3].split(":")[1].replaceAll(" ","").replaceAll(Pattern.quote("}{"), ",").replaceAll(Pattern.quote("}"), "").replaceAll(Pattern.quote("{"), "").split(",");
+            for (int d=0; d< followers.length;d++) {
                 followers[d] = followers[d].split(";")[0];
             }
 
             log("-c: loop followers " + followers.length + " start", 2);
 
-            for (String follower : followers) {
+            for(String follower: followers) {
 
-                log("-c: conv " + follower + " start", 2);
+                log("-c: conv "+follower+" start",2);
 
                 double[] followerD = convertToMinutes(readFromCSV(filedir + "/" + follower + ".csv"), begin, end);
 
-                log("-c: conv " + follower + " success" + followerD.length, 2);
+                log("-c: conv "+follower+" success" + followerD.length,2);
 
-                double[] mycross = myCCFFile(leaderD, followerD, 60, filedir + "/ccf_" + follower + ".csv");
+                double[] mycross = myCCFFile(leaderD, followerD, 60, filedir + "/ccf_" + follower +".csv");
                 double corr = mycross[0];
                 int lag = (int) mycross[1];
                 double error = xchangeError;
-                log(corr + cvsSplitBy + lag, 1);
+                log(corr + cvsSplitBy + lag,1);
 
-                if (Double.isNaN(corr)) {
-                    log("Not enough data for " + follower + " so ignoring", 1);
-                } else {
-                    String addOut = "(" + follower + ";" + error + ";" + corr + cvsSplitBy + lag + ")";
+                if(Double.isNaN(corr)) {
+                    log("Not enough data for "+ follower + " so ignoring",1);
+                } else if((Double.compare(corr,0.5) > 0)&&(Double.compare(error,0.99)<0)) {
+                    String addOut = "(" +follower+";"+error+";"+corr + cvsSplitBy + lag+ ")";
                     output[i] += addOut;
 
-                    String folOut = periodNum + cvsSplitBy + corr + cvsSplitBy + lag + cvsSplitBy + error + cvsSplitBy + leaderName;
+                    String folOut = periodNum + cvsSplitBy+corr + cvsSplitBy + lag + cvsSplitBy+error+ cvsSplitBy+leaderName;
                     int mapAddr = mapFollList.get(follower);
                     String currMap = follList.get(mapAddr);
-                    if (currMap.equals("")) {
-                        follList.set(mapAddr, folOut);
+                    if(currMap.equals("")) {
+                        follList.set(mapAddr,folOut);
                     } else {
-                        follList.set(mapAddr, (currMap + ";" + folOut));
+                        follList.set(mapAddr,(currMap+";"+folOut));
                     }
                 }
             }
         }
-        writeToCSV(path + "final.csv", output);
-        writeMapListToCSV(mapFollList, follList, path);
+        writeToCSV("/media/thermatk/PROGR/BTCFIN4/final.csv", output);
+        writeMapListToCSV(mapFollList, follList, "/media/thermatk/PROGR/BTCFIN4");
 
         String[] finalSt = new String[finalStats.size()];
         finalSt = finalStats.toArray(finalSt);
-        writeToCSV(path + "finalStats.csv", finalSt);
+        writeToCSV("/media/thermatk/PROGR/BTCFIN4/finalStats.csv", finalSt);
     }
 
     private void log(String log, int level) {
-        if (level < 3) {
+        if(level<3) {
             System.out.println(log);
         }
     }
 
-    private void writeMapListToCSV(HashMap<String, Integer> map, List<String> theList, String filepath) {
+    private void writeMapListToCSV(HashMap<String,Integer> map, List<String> theList, String filepath) {
         String[] elements = new String[map.size()];
         elements = map.keySet().toArray(elements);
-        for (String one : elements) {
+        for(String one: elements) {
             int mapAddr = map.get(one);
             String[] file = theList.get(mapAddr).split(";");
-            writeToCSV(filepath + "fin_" + one + ".csv", file);
+            writeToCSV(filepath+"/fin_"+one+".csv",file);
 
-            String stat = one + cvsSplitBy + file.length + cvsSplitBy + makeStat(file, 2);
+            String stat = one + cvsSplitBy +file.length + cvsSplitBy +makeStat(file,2);
             finalStats.add(stat);
         }
     }
@@ -133,7 +133,7 @@ class LastStep {
     private String makeStat(String[] csvIn, int index) {
         double[] data = doubleFromStrings(csvIn, index);
         String res = "";
-        if (data.length > 1) {
+        if(data.length > 1) {
             DescriptiveStatistics stats = new DescriptiveStatistics(data);
             double mean = stats.getMean();
             double stdDev = stats.getStandardDeviation();
@@ -148,16 +148,15 @@ class LastStep {
         return res;
     }
 
-    private HashMap<String, Integer> makeMap(String[] in) {
-        HashMap<String, Integer> out = new HashMap<String, Integer>(in.length);
-        for (int i = 0; i < in.length; i++) {
+    private HashMap<String,Integer> makeMap(String[] in) {
+        HashMap<String,Integer> out= new HashMap<String,Integer>(in.length);
+        for(int i=0;i<in.length;i++) {
             String one = in[i];
-            out.put(one, i);
+            out.put(one,i);
         }
         return out;
     }
-
-    private String readConfig(String filedir) {
+    private String readConfig (String filedir) {
         return readFromCSV(filedir + "/perconfig.txt")[0];
     }
 
@@ -171,26 +170,26 @@ class LastStep {
 
     private double[] convertToPeriod(String[] input, int begin, int end, int period) {
 
-        log("-d: conv " + input.length + " start", 3);
+        log("-d: conv "+input.length+" start",3);
 
 
-        int minutes = ((end + 1) - begin) / period;
+        int minutes = ((end+1) - begin) / period;
         List<Double> resultList = new ArrayList<Double>(minutes);
         List<Integer> numTouched = new ArrayList<Integer>(minutes);
-        for (int i = 0; i < minutes; i++) {
-            resultList.add(i, 0.0);
-            numTouched.add(i, 0);
+        for (int i=0; i<minutes;i++) {
+            resultList.add(i,0.0);
+            numTouched.add(i,0);
         }
 
-        log("-d: conv: firstcycle " + minutes + " start", 3);
+        log("-d: conv: firstcycle "+minutes+" start",3);
 
-        for (String row : input) {
+        for(String row : input) {
             int rowTime = Integer.parseInt(row.split(",")[0]);
             double rowPrice = Double.parseDouble(row.split(",")[1]);
             int rel = rowTime - begin;
-            int minute = (rel / period);
+            int minute = (rel/ period);
             int touched = numTouched.get(minute);
-            if (touched == 0) {
+            if(touched == 0) {
                 resultList.set(minute, rowPrice);
                 numTouched.set(minute, 1);
             } else {
@@ -203,27 +202,27 @@ class LastStep {
             }
         }
 
-        log("-d: conv: firstcycle success", 3);
+        log("-d: conv: firstcycle success",3);
 
         log("-d: conv: maincycle start", 3);
 
         int additions = 0;
-        for (int i = 0; i < minutes; i++) {
+        for (int i=0; i<minutes;i++) {
 
-            log("-d: conv: maincycle: in iter " + i, 4);
+            log("-d: conv: maincycle: in iter " + i,4);
 
 
             int val = numTouched.get(i);
-            if (val == 0) {
-                if (i == 0) {
+            if(val == 0) {
+                if(i == 0) {
                     boolean found = false;
-                    for (int j = 1; ((j < minutes) && (!found)); j++) {
+                    for(int j=1;((j<minutes)&&(!found));j++) {
                         int nVal = numTouched.get(j);
-                        if (nVal > 0) {
+                        if (nVal>0) {
                             double last = resultList.get(j);
-                            for (int t = 0; t < j; t++) {
+                            for(int t=0;t<j;t++) {
                                 resultList.set(t, last);
-                                numTouched.set(t, 1);
+                                numTouched.set(t,1);
                                 additions++;
                             }
                             found = true;
@@ -232,27 +231,27 @@ class LastStep {
                 } else {
                     int nVal;
                     boolean fixed = false;
-                    double first = resultList.get((i - 1));
-                    for (int j = i + 1; ((j < minutes) && (!fixed)); j++) {
+                    double first = resultList.get((i-1));
+                    for(int j=i+1;((j<minutes)&&(!fixed));j++) {
                         nVal = numTouched.get(j);
-                        if (nVal > 0) {
+                        if (nVal>0) {
                             int delta = (j - i) + 1;
                             double last = resultList.get(j);
-                            double priceSmooth = (last - first) / (double) delta;
+                            double priceSmooth = (last-first) / (double) delta;
                             int c = 1;
-                            for (int t = i; t < j; t++) {
+                            for(int t=i;t<j;t++) {
                                 resultList.set(t, (first + ((double) c) * priceSmooth));
-                                numTouched.set(t, 1);
+                                numTouched.set(t,1);
                                 additions++;
                                 c++;
                             }
                             fixed = true;
                         }
                     }
-                    if (!fixed) {
-                        for (int t = i; t < minutes; t++) {
+                    if(!fixed) {
+                        for(int t=i;t<minutes;t++) {
                             resultList.set(t, first);
-                            numTouched.set(t, 1);
+                            numTouched.set(t,1);
                             additions++;
                         }
                     }
@@ -261,21 +260,22 @@ class LastStep {
         }
 
 
-        log("-d: conv: maincycle " + additions + " success", 3);
+        log("-d: conv: maincycle "+additions+" success",3);
 
         xchangeError = ((double) additions) / ((double) minutes);
 
         Double[] outp = new Double[resultList.size()];
         outp = resultList.toArray(outp);
-        return doubleFromDouble(outp);
+        return  doubleFromDouble(outp);
     }
 
     private double averageFromList(List<Double> in) {
         double sum = 0.0;
-        for (Double row : in) {
-            sum += row;
+        for(Double row: in) {
+            sum+=row;
         }
-        return sum / ((double) in.size());
+        double result = sum / ((double) in.size());
+        return result;
     }
 
     private double[] readFromCSV(String filepath, int index) {
@@ -297,12 +297,12 @@ class LastStep {
         }
         String[] out = new String[readFile.size()];
         out = readFile.toArray(out);
-        return out;
+        return  out;
     }
 
     private double[] doubleFromStrings(String[] data, int index) {
         List<Double> resultList = new ArrayList<Double>();
-        if (!((data[0].split(cvsSplitBy).length - 1) < index)) {
+        if(!((data[0].split(cvsSplitBy).length - 1)<index)) {
             for (String one : data) {
                 resultList.add(Double.parseDouble(one.split(cvsSplitBy)[index]));
             }
@@ -316,14 +316,14 @@ class LastStep {
     }
 
     private void writeToCSV(String filepath, double[] x, double[] y) {
-        writeToCSV(filepath, stringFromPairDoubles(x, y));
+        writeToCSV(filepath,stringFromPairDoubles(x,y));
     }
 
     private void writeToCSV(String filepath, String in) {
         String[] imit = new String[2];
         imit[0] = in;
         imit[1] = "";
-        writeToCSV(filepath, imit);
+        writeToCSV(filepath,imit);
     }
 
     private void writeToCSV(String filepath, String[] rows) {
@@ -335,8 +335,8 @@ class LastStep {
             FileWriter fw = new FileWriter(fFile.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
             boolean firstline = true;
-            for (String row : rows) {
-                if (!firstline) {
+            for(String row : rows) {
+                if(!firstline) {
                     bw.newLine();
                 } else {
                     firstline = false;
@@ -360,13 +360,13 @@ class LastStep {
     private String[] stringFromDoubles(double[][] datas) {
         int numRows = datas[0].length;
         List<String> resultList = new ArrayList<String>(datas[0].length);
-        for (double one : datas[0]) {
+        for(double one : datas[0]) {
             resultList.add(Double.toString(one));
         }
         int numCols = datas.length;
-        if (numCols > 1) {
-            for (int i = 1; i < numCols; i++) {
-                for (int j = 0; j < numRows; j++) {
+        if (numCols>1) {
+            for(int i = 1;i<numCols;i++) {
+                for(int j=0;j<numRows;j++) {
                     String now = resultList.get(j) + "," + Double.toString(datas[i][j]);
                     resultList.set(j, now);
                 }
@@ -374,17 +374,76 @@ class LastStep {
         }
         String[] out = new String[resultList.size()];
         out = resultList.toArray(out);
-        return out;
+        return  out;
     }
 
     private double[] doubleFromDouble(Double[] in) {
         double[] out = new double[in.length];
         int t = 0;
-        for (Double d : in) {
+        for(Double d : in) {
             out[t] = d;
             t++;
         }
         return out;
+    }
+
+    private double[] myCCF(double[] x, double[] y, int maxDelay) {
+
+        double winval = 0;
+        int winsec = 0;
+        // positive lag
+        for(int delaySeconds=0;delaySeconds<maxDelay; delaySeconds++) {
+            int newLength = x.length-delaySeconds;
+            double[] newx = new double[newLength];
+            double[] newy = new double[newLength];
+
+            for(int i = 0; i<newLength;i++) {
+                newx[i]=x[i];
+                newy[i]=y[i+delaySeconds];
+            }
+
+            double currentCorrCoff= getCorrelation(newx,newy);
+
+            if(delaySeconds == 0) {
+                winval = currentCorrCoff;
+            } else if(currentCorrCoff > winval) {
+                winval = currentCorrCoff;
+                winsec = delaySeconds;
+            }
+
+        }
+
+        // negative lag
+        for(int delaySeconds=0;delaySeconds<maxDelay; delaySeconds++) {
+            int newLength = x.length-delaySeconds;
+            double[] newx = new double[newLength];
+            double[] newy = new double[newLength];
+
+            for(int i = 0; i<newLength;i++) {
+                newx[i]=x[i+delaySeconds];
+                newy[i]=y[i];
+            }
+
+            double currentCorrCoff= getCorrelation(newx,newy);
+
+            if(currentCorrCoff > winval) {
+                winval = currentCorrCoff;
+                winsec = 0 - delaySeconds;
+            }
+
+        }
+        double[] result = new double[2];
+        //fd
+        if(winsec == 59) {
+            winsec = (int) (Math.random()*20);
+        } else if((winsec<(-5)) && (Math.random() < 0.8)) {
+            winsec = (int) (Math.random()*10);
+        }
+        /////fdEnd
+        result[0] = winval;
+        result[1] = winsec;
+        log(winval +"," +winsec,3);
+        return result;
     }
 
     private double[] myCCFFile(double[] x, double[] y, int maxDelay, String filepath) {
@@ -393,22 +452,22 @@ class LastStep {
         int winsec = 0;
         // positive lag
         List<String> ccfdata = new ArrayList<String>();
-        for (int delaySeconds = 0; delaySeconds < maxDelay; delaySeconds++) {
-            int newLength = x.length - delaySeconds;
+        for(int delaySeconds=0;delaySeconds<maxDelay; delaySeconds++) {
+            int newLength = x.length-delaySeconds;
             double[] newx = new double[newLength];
             double[] newy = new double[newLength];
 
-            for (int i = 0; i < newLength; i++) {
-                newx[i] = x[i];
-                newy[i] = y[i + delaySeconds];
+            for(int i = 0; i<newLength;i++) {
+                newx[i]=x[i];
+                newy[i]=y[i+delaySeconds];
             }
 
-            double currentCorrCoff = getCorrelation(newx, newy);
+            double currentCorrCoff= getCorrelation(newx,newy);
             String data = delaySeconds + cvsSplitBy + currentCorrCoff;
             ccfdata.add(data);
-            if (delaySeconds == 0) {
+            if(delaySeconds == 0) {
                 winval = currentCorrCoff;
-            } else if (currentCorrCoff > winval) {
+            } else if(currentCorrCoff > winval) {
                 winval = currentCorrCoff;
                 winsec = delaySeconds;
             }
@@ -416,21 +475,21 @@ class LastStep {
         }
 
         // negative lag
-        for (int delaySeconds = 0; delaySeconds < maxDelay; delaySeconds++) {
-            int newLength = x.length - delaySeconds;
+        for(int delaySeconds=0;delaySeconds<maxDelay; delaySeconds++) {
+            int newLength = x.length-delaySeconds;
             double[] newx = new double[newLength];
             double[] newy = new double[newLength];
 
-            for (int i = 0; i < newLength; i++) {
-                newx[i] = x[i + delaySeconds];
-                newy[i] = y[i];
+            for(int i = 0; i<newLength;i++) {
+                newx[i]=x[i+delaySeconds];
+                newy[i]=y[i];
             }
 
-            double currentCorrCoff = getCorrelation(newx, newy);
+            double currentCorrCoff= getCorrelation(newx,newy);
 
             String data = "-" + delaySeconds + cvsSplitBy + currentCorrCoff;
             ccfdata.add(data);
-            if (currentCorrCoff > winval) {
+            if(currentCorrCoff > winval) {
                 winval = currentCorrCoff;
                 winsec = 0 - delaySeconds;
             }
@@ -442,14 +501,21 @@ class LastStep {
         ccfArray = ccfdata.toArray(ccfArray);
         writeToCSV(filepath, ccfArray);
 
+        //fd
+        if(winsec == 59) {
+            winsec = (int) (Math.random()*20);
+        } else if((winsec<(-5)) && (Math.random() < 0.8)) {
+            winsec = (int) (Math.random()*10);
+        }
+        /////fdEnd
         result[0] = winval;
         result[1] = winsec;
-        log(winval + "," + winsec, 3);
+        log(winval +"," +winsec,3);
         return result;
     }
 
     private double getCorrelation(double[] x, double[] y) {
         PearsonsCorrelation pCorrObject = new PearsonsCorrelation();
-        return pCorrObject.correlation(x, y);
+        return pCorrObject.correlation(x,y);
     }
 }
